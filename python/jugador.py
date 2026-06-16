@@ -37,4 +37,51 @@ class Jugador:
     
     #Login
     def iniciar_sesion(self, nombre_usuario,contrasenia):
-        datos = self.cargar_jugadores
+        datos = self.cargar_jugadores()
+
+        if nombre_usuario not in datos["jugadores"]:
+            return None, "El usuario no existe."
+
+        info = datos["jugadores"][nombre_usuario]
+
+        if info["contrasena"] != contrasenia:
+            return None, "Contraseña incorrecta."
+        
+    # Retorna Jugador con los datos
+        jugador = Jugador(
+            nombre_usuario,
+            contrasenia,
+            info["victorias_defensor"],
+            info["victorias_atacante"]
+        )
+        return jugador, "Sesión iniciada correctamente."
+
+    def agregar_victoria(self, rol):
+        if rol == "defensor":
+            self.victorias_defensor += 1
+        elif rol == "atacante":
+            self.victorias_atacante += 1
+
+        datos = self.cargar_jugadores()
+        datos["jugadores"][self.nombre_usuario] = {
+            "contrasena": self.contrasenia,
+            "victorias_defensor": self.victorias_defensor,
+            "victorias_atacante": self.victorias_atacante
+        }
+        self.guardar_jugadores(datos)
+
+    #Rank Jugadores
+    def obtener_top(self, rol, cantidad=5):
+        datos = self.cargar_jugadores()
+        jugadores = datos["jugadores"]
+
+        ranking = []
+        for nombre, info in jugadores.items():
+            ranking.append({
+                "nombre": nombre,
+                "victorias": info[f"victorias_{rol}"]
+            })
+
+        # Ordenar de mayor a menor
+        ranking.sort(key=lambda x: x["victorias"], reverse=True)
+        return ranking[:cantidad]
