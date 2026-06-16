@@ -28,7 +28,7 @@ class Jugador:
         if self.nombre_usuario in datos ["jugadores"]:
             return False,"El usuario ya existe"
         datos["Jugadores"][self.nombre_usuario]={
-            "contraseña" : self.contraseña,
+            "contraseña" : self.contrasenia,
             "victorias_defensor": self.victorias_defensor,
             "victorias_atacante": self.victorias_atacante
         }
