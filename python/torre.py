@@ -83,3 +83,35 @@ class TorreMagica(Torre):
             if objetivo.viva:
                 objetivo.congelada = True
         print(f"{self.nombre} usó Congelar!")
+
+class Muro:
+    def __init__(self, faccion="medieval"):
+        self.nombre = "Muro"
+        self.costo = 20
+        self.vida = 150
+        self.viva = True
+        self.faccion = faccion
+
+    def recibir_daño(self, cantidad):
+        self.vida -= cantidad
+        if self.vida <= 0:
+            self.viva = False
+
+    def __str__(self):
+        return f"Muro | Vida: {self.vida}"
+
+
+class Base:
+    def __init__(self):
+        self.nombre = "Base Central"
+        self.vida = 500
+        self.viva = True
+
+    def recibir_daño(self, cantidad):
+        self.vida -= cantidad
+        if self.vida <= 0:
+            self.viva = False
+            print("¡La base fue destruida!")
+
+    def __str__(self):
+        return f"Base Central | Vida: {self.vida}"
