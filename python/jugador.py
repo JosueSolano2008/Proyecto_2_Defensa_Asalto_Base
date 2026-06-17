@@ -4,11 +4,11 @@ import os
 archivo_jugadores = "jugadores.json"
 
 class Jugador:
-    def __init__(self, nombre_usuario:str, contrasenia: str):
+    def __init__(self, nombre_usuario:str, contrasenia: str,victorias_defensor=0, victorias_atacante=0):
         self.nombre_usuario = nombre_usuario
         self.contrasenia = contrasenia
-        self.victorias_defensor = 0
-        self.victorias_atacante = 0
+        self.victorias_defensor = victorias_defensor
+        self.victorias_atacante = victorias_atacante
 
     #archivo
     def cargar_jugadores (self):
@@ -25,7 +25,7 @@ class Jugador:
     def registrar(self):
         datos=self.cargar_jugadores()
 
-        if self.nombre_usuario in datos ["jugadores"]:
+        if self.nombre_usuario in datos ["Jugadores"]:
             return False,"El usuario ya existe"
         datos["Jugadores"][self.nombre_usuario]={
             "contraseña" : self.contrasenia,
