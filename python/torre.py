@@ -1,10 +1,14 @@
+# python/torre.py
+# Diseño de clases, valores y habilidades: trabajo conjunto de ambos integrantes.
+
 class Torre:
-    def __init__(self, nombre, costo, vida, daño, alcance):
+    def __init__(self, nombre, costo, vida, daño, alcance, faccion="imperio"):
         self.nombre = nombre
         self.costo = costo
         self.vida = vida
         self.daño = daño
         self.alcance = alcance
+        self.faccion = faccion
         self.turnos_habilidad = 3
         self.turno_actual = 0
         self.viva = True
@@ -28,35 +32,23 @@ class Torre:
 
     def __str__(self):
         return f"{self.nombre} | Vida: {self.vida} | Daño: {self.daño} | Alcance: {self.alcance}"
-    
+
+
 class TorreBasica(Torre):
-    def __init__(self):
-        super().__init__(
-            nombre="Torre Básica",
-            costo=50,
-            vida=80,
-            daño=15,
-            alcance=3
-        )
+    def __init__(self, faccion="imperio"):
+        super().__init__("Torre Básica", costo=50, vida=80, daño=15, alcance=3, faccion=faccion)
         self.turnos_habilidad = 3
 
     def activar_habilidad(self, unidades):
-        objetivos = unidades[:2]
-        for unidad in objetivos:
+        for unidad in unidades[:2]:
             if unidad.viva:
                 unidad.vida -= self.daño
         print(f"{self.nombre} usó Disparo Doble!")
 
 
 class TorrePesada(Torre):
-    def __init__(self):
-        super().__init__(
-            nombre="Torre Pesada",
-            costo=150,
-            vida=200,
-            daño=40,
-            alcance=2
-        )
+    def __init__(self, faccion="imperio"):
+        super().__init__("Torre Pesada", costo=150, vida=200, daño=40, alcance=2, faccion=faccion)
         self.turnos_habilidad = 4
 
     def activar_habilidad(self, unidades):
@@ -67,14 +59,8 @@ class TorrePesada(Torre):
 
 
 class TorreMagica(Torre):
-    def __init__(self):
-        super().__init__(
-            nombre="Torre Mágica",
-            costo=100,
-            vida=60,
-            daño=10,
-            alcance=4
-        )
+    def __init__(self, faccion="imperio"):
+        super().__init__("Torre Mágica", costo=100, vida=60, daño=10, alcance=4, faccion=faccion)
         self.turnos_habilidad = 3
 
     def activar_habilidad(self, unidades):
@@ -84,8 +70,9 @@ class TorreMagica(Torre):
                 objetivo.congelada = True
         print(f"{self.nombre} usó Congelar!")
 
+
 class Muro:
-    def __init__(self, faccion="medieval"):
+    def __init__(self, faccion="imperio"):
         self.nombre = "Muro"
         self.costo = 20
         self.vida = 150
@@ -111,7 +98,6 @@ class Base:
         self.vida -= cantidad
         if self.vida <= 0:
             self.viva = False
-            print("¡La base fue destruida!")
 
     def __str__(self):
         return f"Base Central | Vida: {self.vida}"
