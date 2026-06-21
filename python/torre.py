@@ -14,11 +14,13 @@ class Torre:
         self.viva = True
 
     def atacar(self, unidad):
-        unidad.vida -= self.daño
+        unidad.recibir_daño(self.daño)
 
     def recibir_daño(self, cantidad):
         self.vida -= cantidad
+
         if self.vida <= 0:
+            self.vida = 0
             self.viva = False
 
     def activar_habilidad(self, unidades):
@@ -39,11 +41,11 @@ class TorreBasica(Torre):
         super().__init__("Torre Básica", costo=50, vida=80, daño=15, alcance=3, faccion=faccion)
         self.turnos_habilidad = 3
 
-    def activar_habilidad(self, unidades):
-        for unidad in unidades[:2]:
-            if unidad.viva:
-                unidad.vida -= self.daño
-        print(f"{self.nombre} usó Disparo Doble!")
+def activar_habilidad(self, unidades):
+    for unidad in unidades:
+        if unidad.viva:
+            unidad.recibir_daño(self.daño // 2)
+    print(f"{self.nombre} usó Daño en Área!")
 
 
 class TorrePesada(Torre):
@@ -82,6 +84,7 @@ class Muro:
     def recibir_daño(self, cantidad):
         self.vida -= cantidad
         if self.vida <= 0:
+            self.vida = 0
             self.viva = False
 
     def __str__(self):
@@ -96,7 +99,9 @@ class Base:
 
     def recibir_daño(self, cantidad):
         self.vida -= cantidad
+
         if self.vida <= 0:
+            self.vida = 0
             self.viva = False
 
     def __str__(self):

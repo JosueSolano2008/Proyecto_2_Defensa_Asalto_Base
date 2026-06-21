@@ -63,19 +63,42 @@ def mover_unidad(mapa, fila, col):
 
     f_actual, c_actual = fila, col
 
+    objetivos = [
+        (FILA_BASE - 1, COL_BASE),
+        (FILA_BASE + 1, COL_BASE),
+        (FILA_BASE, COL_BASE - 1),
+        (FILA_BASE, COL_BASE + 1),
+    ]
+
+    objetivos_validos = []
+    for f, c in objetivos:
+        if 0 <= f < FILAS and 0 <= c < COLUMNAS:
+            objetivos_validos.append((f, c))
+
     for _ in range(unidad.velocidad):
         mejor_f, mejor_c = f_actual, c_actual
-        menor_dist = distancia(f_actual, c_actual, FILA_BASE, COL_BASE)
+
+        menor_dist = min(
+            abs(f_actual - fo) + abs(c_actual - co)
+            for fo, co in objetivos_validos
+        )
 
         for df, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
             nf, nc = f_actual + df, c_actual + dc
+
             if not (0 <= nf < FILAS and 0 <= nc < COLUMNAS):
                 continue
+
             celda = mapa[nf][nc]
-            if celda is None or isinstance(celda, Base):
-                d = distancia(nf, nc, FILA_BASE, COL_BASE)
-                if d < menor_dist:
-                    menor_dist = d
+
+            if celda is None:
+                nueva_dist = min(
+                    abs(nf - fo) + abs(nc - co)
+                    for fo, co in objetivos_validos
+                )
+
+                if nueva_dist < menor_dist:
+                    menor_dist = nueva_dist
                     mejor_f, mejor_c = nf, nc
 
         if (mejor_f, mejor_c) == (f_actual, c_actual):
@@ -83,10 +106,10 @@ def mover_unidad(mapa, fila, col):
 
         mapa[mejor_f][mejor_c] = mapa[f_actual][c_actual]
         mapa[f_actual][c_actual] = None
+
         f_actual, c_actual = mejor_f, mejor_c
 
     return f_actual, c_actual
-
 
 class Juego:
     def __init__(self, jugador_defensor=None, jugador_atacante=None,

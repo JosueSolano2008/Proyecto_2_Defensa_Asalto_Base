@@ -1,1 +1,34 @@
-{"jugadores": {}}
+{
+    "jugadores": {
+        "Josu\u00e9": {
+            "contrasena": "2008",
+            "victorias_defensor": 1,
+            "victorias_atacante": 0
+        },
+        "josuda": {
+            "contrasena": "3333",
+            "victorias_defensor": 0,
+            "victorias_atacante": 0
+        },
+        "Josu": {
+            "contrasena": "2008",
+            "victorias_defensor": 0,
+            "victorias_atacante": 0
+        },
+        "1": {
+            "contrasena": "1",
+            "victorias_defensor": 0,
+            "victorias_atacante": 0
+        },
+        "2": {
+            "contrasena": "2",
+            "victorias_defensor": 0,
+            "victorias_atacante": 1
+        },
+        "3": {
+            "contrasena": "3",
+            "victorias_defensor": 0,
+            "victorias_atacante": 0
+        }
+    }
+}

@@ -1,8 +1,11 @@
 # main.py - Punto de entrada del juego
+import os
 import tkinter as tk
 from tkinter import messagebox
+from PIL import Image, ImageTk
 from python.jugador import Jugador
 from python.juego import Juego, FILAS, COLUMNAS, FILA_BASE, COL_BASE
+from python.juego import obtener_torres, obtener_unidades, distancia, mover_unidad
 from python.torre import Torre, TorreBasica, TorrePesada, TorreMagica, Muro, Base
 from python.unidad import Unidad
 from python.imagenes import obtener_imagen, clave_torre, clave_unidad
@@ -10,8 +13,8 @@ from python.imagenes import obtener_imagen, clave_torre, clave_unidad
 FACCIONES = ["imperio", "rebeldes", "reinado"]
 
 COLORES = {
-    "bg":      "#1a1a2e",
-    "panel":   "#16213e",
+    "bg":      "#1c1a2e",
+    "panel":   "#2f3d64",
     "acento":  "#0f3460",
     "boton":   "#e94560",
     "boton2":  "#0f3460",
@@ -30,7 +33,7 @@ FACCIONES_COLORES = {
 CELDA_COLORES = {
     "vacia":    "#2d5a27",
     "base":     "#FFD700",
-    "muro":     "#808080",
+    "muro":     "#8B8B8B",
     "torre":    {"imperio": "#8B4513", "rebeldes": "#228B22", "reinado": "#4682B4"},
     "unidad":   {"imperio": "#cc3300", "rebeldes": "#ff6600", "reinado": "#884400"},
 }
@@ -130,8 +133,14 @@ class PantallaLogin:
             messagebox.showwarning("Campos vacíos", "Ingresa usuario y contraseña.")
             return
         ok, msg = Jugador(u, p).registrar()
-        color = "#00cc66" if ok else "#e94560"
-        self._labels_estado[idx].config(text=f"{'✓' if ok else '✗'} {msg}", fg=color)
+        if ok:
+            jugador, _ = Jugador(u, p).iniciar_sesion(u, p)
+            if jugador:
+                self.jugadores_auth[idx] = jugador
+                self._labels_estado[idx].config(
+                    text=f"✓ Registrado e ingresado como: {u}", fg="#00cc66")
+        else:
+            self._labels_estado[idx].config(text=f"✗ {msg}", fg="#e94560")
 
     def _login(self, idx):
         u, p = self.vars[idx][0].get().strip(), self.vars[idx][1].get().strip()
@@ -224,12 +233,44 @@ class PantallaMapa:
         self.juego = juego
         self.fase = FASE_DEF
         self.seleccion = tk.StringVar(value="basica")
+        self.img_fondo = self._cargar_imagen_asset("fondo.png",COLUMNAS * TAMAÑO_CELDA,FILAS * TAMAÑO_CELDA)
+        self.img_explosion = self._cargar_imagen_asset("explosión.webp",TAMAÑO_CELDA,TAMAÑO_CELDA)
+        self.img_muro = self._cargar_imagen_asset("Muro.png",TAMAÑO_CELDA,TAMAÑO_CELDA)
 
         self.frame = tk.Frame(root, bg=COLORES["bg"])
         self.frame.pack(fill="both", expand=True)
 
         self._construir_ui()
         self.dibujar_mapa()
+
+    def _ruta_asset(self, nombre):
+        return os.path.join(os.path.dirname(__file__), "Assets", nombre)
+
+    def _cargar_imagen_asset(self, nombre, ancho, alto):
+        ruta = self._ruta_asset(nombre)
+
+        if not os.path.exists(ruta):
+            print(f"No se encontró la imagen: {ruta}")
+            return None
+
+        try:
+            img = Image.open(ruta).convert("RGBA")
+            img = img.resize((ancho, alto), Image.LANCZOS)
+            return ImageTk.PhotoImage(img)
+        except Exception as e:
+            print(f"Error cargando imagen {nombre}: {e}")
+            return None
+
+    def _mostrar_explosion(self, fila, col):
+        if self.img_explosion is None:
+            return
+
+        x = col * TAMAÑO_CELDA + TAMAÑO_CELDA // 2
+        y = fila * TAMAÑO_CELDA + TAMAÑO_CELDA // 2
+
+        explosion_id = self.canvas.create_image(x, y, image=self.img_explosion)
+
+        self.root.after(350, lambda: self.canvas.delete(explosion_id))
 
     def _construir_ui(self):
         # Canvas del mapa
@@ -344,7 +385,9 @@ class PantallaMapa:
     def dibujar_mapa(self):
         self.canvas.delete("all")
         mapa = self.juego.mapa
-        self._refs_img = []  # evita que Tkinter libere las imágenes (garbage collector)
+        self._refs_img = []
+        if self.img_fondo is not None:
+            self.canvas.create_image(0, 0, image=self.img_fondo, anchor="nw")
 
         for fila in range(FILAS):
             for col in range(COLUMNAS):
@@ -358,15 +401,15 @@ class PantallaMapa:
                 imagen = None
 
                 if celda is None:
-                    color = CELDA_COLORES["vacia"]
+                    color = ""
                     texto = ""
                 elif isinstance(celda, Base):
                     color = CELDA_COLORES["base"]
                     texto = "BASE"
                 elif isinstance(celda, Muro):
-                    fac = getattr(celda, "faccion", "imperio")
-                    color = FACCIONES_COLORES.get(fac, "#808080")
-                    texto = "M"
+                    color = ""
+                    texto = f"{max(0, celda.vida)}HP"
+                    imagen = self.img_muro
                 elif isinstance(celda, Torre):
                     fac = getattr(celda, "faccion", "imperio")
                     color = FACCIONES_COLORES.get(fac, "#1E90FF")
@@ -382,8 +425,12 @@ class PantallaMapa:
                     color = CELDA_COLORES["vacia"]
                     texto = ""
 
-                self.canvas.create_rectangle(x1, y1, x2, y2,
-                                             fill=color, outline="#1a1a2e", width=1)
+                    self.canvas.create_rectangle(
+                        x1, y1, x2, y2,
+                        fill=color,
+                        outline="#1a1a2e",
+                        width=1
+                    )
                 if imagen is not None:
                     self._refs_img.append(imagen)
                     self.canvas.create_image(cx, cy, image=imagen)
@@ -440,31 +487,120 @@ class PantallaMapa:
             self.root.after(300, self._ejecutar_combate)
 
     def _ejecutar_combate(self):
-        ganador_ronda = self.juego.ejecutar_combate()
+        self._turno_actual = 0
+        self._ganador_ronda = None
+        self._daño_total_atk = 0
+        self._ejecutar_turno()
+
+    def _ejecutar_turno(self):
+        from python.juego import obtener_torres, obtener_unidades, distancia, mover_unidad
+        from python.torre import Torre, Muro, Base
+        from python.unidad import Unidad
+
+        mapa = self.juego.mapa
+        self._turno_actual += 1
+
+        if self._turno_actual > 50:
+            self._finalizar_combate("defensor")
+            return
+
+        self.lbl_msg.config(text=f"Turno {self._turno_actual}...", fg="#ffcc00")
+
+        # Torres atacan
+        for f, c, torre in obtener_torres(mapa):
+            unidades_en_alcance = [
+                u for fu, cu, u in obtener_unidades(mapa)
+                if distancia(f, c, fu, cu) <= torre.alcance
+            ]
+            torre.actualizar_turno(unidades_en_alcance)
+            if unidades_en_alcance:
+                torre.atacar(unidades_en_alcance[0])
+
+        # Limpiar muertos
+        explosiones = []
+
+        for f in range(10):
+            for c in range(10):
+                if isinstance(mapa[f][c], Unidad) and not mapa[f][c].viva:
+                    explosiones.append((f, c))
+                    mapa[f][c] = None
+
+        # Mover unidades y atacar
+        for f, c, unidad in list(obtener_unidades(mapa)):
+            if not unidad.viva:
+                continue
+            if unidad.congelada:
+                unidad.congelada = False
+                continue
+
+            nf, nc = mover_unidad(mapa, f, c)
+
+            # Verificar si llegó a la base
+            from python.juego import FILA_BASE, COL_BASE
+            if abs(nf - FILA_BASE) + abs(nc - COL_BASE) == 1:
+                self.juego.base.recibir_daño(unidad.daño)
+                self._daño_total_atk += unidad.daño
+                self.juego.dinero_atacante += unidad.daño
+                if not self.juego.base.viva:
+                    self.dibujar_mapa()
+                    self._mostrar_explosion(FILA_BASE, COL_BASE)
+                    self.root.after(400, lambda: self._finalizar_combate("atacante"))
+                    return
+            else:
+                for df, dc in [(-1,0),(1,0),(0,-1),(0,1)]:
+                    af, ac = nf+df, nc+dc
+                    if not (0 <= af < 10 and 0 <= ac < 10):
+                        continue
+                    obj = mapa[af][ac]
+                    if isinstance(obj, (Torre, Muro)) and obj.viva:
+                        obj.recibir_daño(unidad.daño)
+                        self.juego.dinero_atacante += unidad.daño // 2
+                        if not obj.viva:
+                            explosiones.append((af, ac))
+                            mapa[af][ac] = None
+                        break
+
+            unidad.actualizar_turno()
+
+        # Redibujar después de cada turno
+        self.dibujar_mapa()
+
+        for f_exp, c_exp in explosiones:
+            self._mostrar_explosion(f_exp, c_exp)
+
+        self._actualizar_panel()
+        # Verificar si quedan unidades
+        if not obtener_unidades(mapa):
+            self._finalizar_combate("defensor")
+            return
+
+        # Siguiente turno después de 600ms (puedes ajustar la velocidad)
+        self.root.after(600, self._ejecutar_turno)
+
+    def _finalizar_combate(self, ganador_ronda):
         self.juego.registrar_victoria_ronda(ganador_ronda)
         self.dibujar_mapa()
         self._actualizar_panel()
 
-        # Mostrar log
         top = tk.Toplevel(self.root)
         top.title("Resultado del combate")
         top.configure(bg=COLORES["bg"])
-        top.geometry("420x400")
         centrar(top, 420, 420)
 
         quien = "DEFENSOR" if ganador_ronda == "defensor" else "ATACANTE"
-        mk_label(top, f"✦ Ganó el {quien} ✦", size=13, bold=True,
-                 color=COLORES["boton"], bg=COLORES["bg"]).pack(pady=(12, 6))
-
-        txt = tk.Text(top, bg=COLORES["entrada"], fg=COLORES["texto"],
-                      font=("Consolas", 8), relief="flat", wrap="word")
-        txt.pack(fill="both", expand=True, padx=12, pady=6)
-        txt.insert("end", "\n".join(self.juego.log))
-        txt.config(state="disabled")
+        mk_label(
+            top,
+            f"✦ Ganó el {quien} ✦",
+            size=13,
+            bold=True,
+            color=COLORES["boton"],
+            bg=COLORES["bg"]
+        ).pack(pady=(12, 6))
 
         def cerrar_y_continuar():
             top.destroy()
             ganador_partida, rol = self.juego.hay_ganador_partida()
+
             if ganador_partida:
                 ganador_partida.agregar_victoria(rol)
                 self.frame.destroy()
@@ -476,8 +612,10 @@ class PantallaMapa:
                 self.btn_terminar.config(state="normal")
                 self._actualizar_panel()
                 self.dibujar_mapa()
-                self.lbl_msg.config(text=f"Ronda {self.juego.ronda_actual}. Turno del defensor.",
-                                    fg="#ffcc00")
+                self.lbl_msg.config(
+                    text=f"Ronda {self.juego.ronda_actual}. Turno del defensor.",
+                    fg="#ffcc00"
+                )
 
         mk_btn(top, "Continuar", cerrar_y_continuar, ancho=16).pack(pady=8)
 
@@ -532,7 +670,7 @@ class PantallaFin:
 # ── Ranking ────────────────────────────────────────────────────
 
 def _construir_ranking(parent):
-    mk_label(parent, "🏅  TOP JUGADORES  🏅", size=13, bold=True,
+    mk_label(parent, " TOP JUGADORES ", size=13, bold=True,
              color=COLORES["boton"], bg=COLORES["bg"]).pack(pady=(14, 10))
 
     container = tk.Frame(parent, bg=COLORES["bg"])
