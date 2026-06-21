@@ -90,8 +90,9 @@ def mover_unidad(mapa, fila, col):
                 continue
 
             celda = mapa[nf][nc]
+            es_celda_base = (nf == FILA_BASE and nc == COL_BASE)
 
-            if celda is None:
+            if celda is None and not es_celda_base:
                 nueva_dist = min(
                     abs(nf - fo) + abs(nc - co)
                     for fo, co in objetivos_validos
@@ -241,7 +242,9 @@ class Juego:
 
                 nf, nc = mover_unidad(self.mapa, f, c)
 
-                if nf == FILA_BASE and nc == COL_BASE:
+                adyacente_a_base = (abs(nf - FILA_BASE) + abs(nc - COL_BASE) == 1)
+
+                if adyacente_a_base:
                     self.base.recibir_daño(unidad.daño)
                     daño_total_atacante += unidad.daño
                     self.dinero_atacante += unidad.daño
