@@ -268,10 +268,11 @@ class PantallaMapa:
         self.frame_animacion = 0
         self.animacion_activa = True
         self.animacion_id = None
+        color_defensor = FACCIONES_COLORES.get(juego.faccion_def, "#4682B4")
         self.img_fondo = self._cargar_imagen_asset("fondo.png",COLUMNAS * TAMAÑO_CELDA,FILAS * TAMAÑO_CELDA)
         self.img_explosion = self._cargar_imagen_asset("explosion.webp",TAMAÑO_CELDA,TAMAÑO_CELDA)
-        self.img_muro = self._cargar_imagen_asset("Muro.png",TAMAÑO_CELDA,TAMAÑO_CELDA)
-        self.img_base = self._cargar_imagen_asset("Base.png", TAMAÑO_CELDA, TAMAÑO_CELDA)
+        self.img_muro = self._cargar_imagen_asset("Muro.png",TAMAÑO_CELDA,TAMAÑO_CELDA, color_defensor)
+        self.img_base = self._cargar_imagen_asset("Base.png", TAMAÑO_CELDA, TAMAÑO_CELDA, color_defensor)
 
         self.frame = tk.Frame(root, bg=COLORES["bg"])
         self.frame.bind("<Destroy>", self._al_destruir_frame, add="+")
@@ -304,7 +305,7 @@ class PantallaMapa:
         if event.widget is self.frame:
             self._detener_animacion()
 
-    def _cargar_imagen_asset(self, nombre, ancho, alto):
+    def _cargar_imagen_asset(self, nombre, ancho, alto, tinte=None):
         ruta = self._ruta_asset(nombre)
 
         if not os.path.exists(ruta):
@@ -314,6 +315,11 @@ class PantallaMapa:
         try:
             img = Image.open(ruta).convert("RGBA")
             img = img.resize((ancho, alto), Image.LANCZOS)
+            if tinte:
+                r, g, b = self.root.winfo_rgb(tinte)
+                color = (r // 256, g // 256, b // 256, 85)
+                capa_tinte = Image.new("RGBA", img.size, color)
+                img = Image.alpha_composite(img, capa_tinte)
             return ImageTk.PhotoImage(img)
         except Exception as e:
             print(f"Error cargando imagen {nombre}: {e}")
@@ -593,8 +599,10 @@ class PantallaMapa:
 
         for f in range(10):
             for c in range(10):
-                if isinstance(mapa[f][c], Unidad) and not mapa[f][c].viva:
+                unidad_muerta = mapa[f][c]
+                if isinstance(unidad_muerta, Unidad) and not unidad_muerta.viva:
                     explosiones.append((f, c))
+                    self.juego.dinero_defensor += unidad_muerta.costo // 2
                     mapa[f][c] = None
 
         # Mover unidades y atacar
