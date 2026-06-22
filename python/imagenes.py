@@ -5,7 +5,7 @@
 
 import os
 import tkinter as tk
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageSequence
 
 CARPETA_ASSETS = os.path.join(os.path.dirname(os.path.dirname(__file__)), "Assets")
 
@@ -39,30 +39,40 @@ ARCHIVOS = {
 
 _CACHE = {}  # (faccion, clave, tamaño) -> PhotoImage
 
-
-def obtener_imagen(faccion: str, clave: str, tamaño: int = 50):
-    """Devuelve un ImageTk.PhotoImage ya redimensionado, o None si no existe."""
+def obtener_imagen(faccion: str, clave: str, tamaño: int = 50, frame_idx: int = 0):
     faccion = (faccion or "").lower()
+
     if faccion not in ARCHIVOS or clave not in ARCHIVOS[faccion]:
         return None
 
     cache_key = (faccion, clave, tamaño)
-    if cache_key in _CACHE:
-        return _CACHE[cache_key]
 
-    ruta = os.path.join(CARPETA_ASSETS, faccion.capitalize(), ARCHIVOS[faccion][clave])
-    if not os.path.exists(ruta):
-        return None
+    if cache_key not in _CACHE:
+        ruta = os.path.join(CARPETA_ASSETS, faccion.capitalize(), ARCHIVOS[faccion][clave])
 
-    try:
-        img = Image.open(ruta).convert("RGBA")
-        img = img.resize((tamaño, tamaño), Image.LANCZOS)
-        foto = ImageTk.PhotoImage(img)
-    except Exception:
-        return None
+        if not os.path.exists(ruta):
+            return None
 
-    _CACHE[cache_key] = foto
-    return foto
+        try:
+            img_original = Image.open(ruta)
+            frames = []
+
+            for frame in ImageSequence.Iterator(img_original):
+                frame = frame.convert("RGBA")
+                frame = frame.resize((tamaño, tamaño), Image.LANCZOS)
+                frames.append(ImageTk.PhotoImage(frame))
+
+            if not frames:
+                return None
+
+            _CACHE[cache_key] = frames
+
+        except Exception as e:
+            print(f"Error cargando imagen {ruta}: {e}")
+            return None
+
+    frames = _CACHE[cache_key]
+    return frames[frame_idx % len(frames)]
 
 
 def clave_torre(nombre_torre: str) -> str:

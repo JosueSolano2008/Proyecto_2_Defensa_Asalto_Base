@@ -233,18 +233,26 @@ class PantallaMapa:
         self.juego = juego
         self.fase = FASE_DEF
         self.seleccion = tk.StringVar(value="basica")
+        self.frame_animacion = 0
         self.img_fondo = self._cargar_imagen_asset("fondo.png",COLUMNAS * TAMAÑO_CELDA,FILAS * TAMAÑO_CELDA)
-        self.img_explosion = self._cargar_imagen_asset("explosión.webp",TAMAÑO_CELDA,TAMAÑO_CELDA)
+        self.img_explosion = self._cargar_imagen_asset("explosion.webp",TAMAÑO_CELDA,TAMAÑO_CELDA)
         self.img_muro = self._cargar_imagen_asset("Muro.png",TAMAÑO_CELDA,TAMAÑO_CELDA)
+        self.img_base = self._cargar_imagen_asset("Base.png", TAMAÑO_CELDA, TAMAÑO_CELDA)
 
         self.frame = tk.Frame(root, bg=COLORES["bg"])
         self.frame.pack(fill="both", expand=True)
 
         self._construir_ui()
         self.dibujar_mapa()
+        self._animar_gifs()
 
     def _ruta_asset(self, nombre):
         return os.path.join(os.path.dirname(__file__), "Assets", nombre)
+
+    def _animar_gifs(self):
+        self.frame_animacion += 1
+        self.dibujar_mapa()
+        self.root.after(150, self._animar_gifs)
 
     def _cargar_imagen_asset(self, nombre, ancho, alto):
         ruta = self._ruta_asset(nombre)
@@ -403,34 +411,41 @@ class PantallaMapa:
                 if celda is None:
                     color = ""
                     texto = ""
+
                 elif isinstance(celda, Base):
-                    color = CELDA_COLORES["base"]
-                    texto = "BASE"
+                    color = ""
+                    texto = f"{max(0, celda.vida)}HP"
+                    imagen = self.img_base
+
                 elif isinstance(celda, Muro):
                     color = ""
                     texto = f"{max(0, celda.vida)}HP"
                     imagen = self.img_muro
+
                 elif isinstance(celda, Torre):
                     fac = getattr(celda, "faccion", "imperio")
                     color = FACCIONES_COLORES.get(fac, "#1E90FF")
                     tipo = celda.nombre[6] if len(celda.nombre) > 6 else "T"
-                    texto = f"T{tipo}\n{celda.vida}HP"
+                    texto = f"T{tipo}\n{max(0, celda.vida)}HP"
                     imagen = obtener_imagen(fac, clave_torre(celda.nombre), TAMAÑO_CELDA)
+
                 elif isinstance(celda, Unidad):
                     fac = getattr(celda, "faccion", "imperio")
                     color = CELDA_COLORES["unidad"].get(fac, "#FF4500")
-                    texto = f"{celda.nombre[:3]}\n{celda.vida}HP"
-                    imagen = obtener_imagen(fac, clave_unidad(celda.nombre), TAMAÑO_CELDA)
+                    texto = f"{celda.nombre[:3]}\n{max(0, celda.vida)}HP"
+                    imagen = obtener_imagen(fac,clave_unidad(celda.nombre),TAMAÑO_CELDA,self.frame_animacion)
+
                 else:
                     color = CELDA_COLORES["vacia"]
                     texto = ""
 
-                    self.canvas.create_rectangle(
-                        x1, y1, x2, y2,
-                        fill=color,
-                        outline="#1a1a2e",
-                        width=1
-                    )
+                self.canvas.create_rectangle(
+                    x1, y1, x2, y2,
+                    fill=color,
+                    outline="#1a1a2e",
+                    width=1
+                )
+
                 if imagen is not None:
                     self._refs_img.append(imagen)
                     self.canvas.create_image(cx, cy, image=imagen)
@@ -507,12 +522,19 @@ class PantallaMapa:
         self.lbl_msg.config(text=f"Turno {self._turno_actual}...", fg="#ffcc00")
 
         # Torres atacan
+        mensajes_habilidades = []
+
         for f, c, torre in obtener_torres(mapa):
             unidades_en_alcance = [
                 u for fu, cu, u in obtener_unidades(mapa)
                 if distancia(f, c, fu, cu) <= torre.alcance
             ]
-            torre.actualizar_turno(unidades_en_alcance)
+
+            habilidad_activada, mensaje = torre.actualizar_turno(unidades_en_alcance)
+
+            if habilidad_activada:
+                mensajes_habilidades.append(mensaje)
+
             if unidades_en_alcance:
                 torre.atacar(unidades_en_alcance[0])
 
@@ -569,6 +591,12 @@ class PantallaMapa:
             self._mostrar_explosion(f_exp, c_exp)
 
         self._actualizar_panel()
+        if mensajes_habilidades:
+            self.lbl_msg.config(
+                text="\n".join(mensajes_habilidades),
+                fg="#ffcc00"
+            )
+
         # Verificar si quedan unidades
         if not obtener_unidades(mapa):
             self._finalizar_combate("defensor")
@@ -611,6 +639,7 @@ class PantallaMapa:
                 self.fase = FASE_DEF
                 self.btn_terminar.config(state="normal")
                 self._actualizar_panel()
+
                 self.dibujar_mapa()
                 self.lbl_msg.config(
                     text=f"Ronda {self.juego.ronda_actual}. Turno del defensor.",
@@ -677,8 +706,8 @@ def _construir_ranking(parent):
     container.pack(fill="both", expand=True, padx=20)
 
     j_temp = Jugador("_", "_")
-    for col_idx, (titulo_col, rol) in enumerate([("🛡 Defensores", "defensor"),
-                                                  ("⚔ Atacantes",  "atacante")]):
+    for col_idx, (titulo_col, rol) in enumerate([("Defensores", "defensor"),
+                                                  ("Atacantes",  "atacante")]):
         frame_col = tk.Frame(container, bg=COLORES["panel"],
                              highlightthickness=1, highlightbackground=COLORES["borde"])
         frame_col.grid(row=0, column=col_idx, padx=10, sticky="nsew")

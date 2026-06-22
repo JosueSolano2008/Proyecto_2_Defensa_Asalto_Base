@@ -28,9 +28,12 @@ class Torre:
 
     def actualizar_turno(self, unidades):
         self.turno_actual += 1
+
         if self.turno_actual >= self.turnos_habilidad:
-            self.activar_habilidad(unidades)
             self.turno_actual = 0
+            return self.activar_habilidad(unidades)
+
+        return False, ""
 
     def __str__(self):
         return f"{self.nombre} | Vida: {self.vida} | Daño: {self.daño} | Alcance: {self.alcance}"
@@ -41,11 +44,21 @@ class TorreBasica(Torre):
         super().__init__("Torre Básica", costo=50, vida=80, daño=15, alcance=3, faccion=faccion)
         self.turnos_habilidad = 3
 
-def activar_habilidad(self, unidades):
-    for unidad in unidades:
-        if unidad.viva:
-            unidad.recibir_daño(self.daño // 2)
-    print(f"{self.nombre} usó Daño en Área!")
+    def activar_habilidad(self, unidades):
+        if len(unidades) == 0:
+            return False, ""
+
+        atacadas = 0
+
+        for unidad in unidades[:2]:
+            if unidad.viva:
+                unidad.recibir_daño(self.daño)
+                atacadas += 1
+
+        if atacadas > 0:
+            return True, f"{self.nombre} usó Disparo Doble contra {atacadas} unidad(es)."
+
+        return False, ""
 
 
 class TorrePesada(Torre):
@@ -54,11 +67,20 @@ class TorrePesada(Torre):
         self.turnos_habilidad = 4
 
     def activar_habilidad(self, unidades):
+        if len(unidades) == 0:
+            return False, ""
+
+        golpeadas = 0
+
         for unidad in unidades:
             if unidad.viva:
-                unidad.vida -= self.daño // 2
-        print(f"{self.nombre} usó Daño en Área!")
+                unidad.recibir_daño(self.daño // 2)
+                golpeadas += 1
 
+        if golpeadas > 0:
+            return True, f"{self.nombre} usó Daño en Área contra {golpeadas} unidad(es)."
+
+        return False, ""
 
 class TorreMagica(Torre):
     def __init__(self, faccion="imperio"):
@@ -66,11 +88,16 @@ class TorreMagica(Torre):
         self.turnos_habilidad = 3
 
     def activar_habilidad(self, unidades):
-        if unidades:
-            objetivo = unidades[0]
-            if objetivo.viva:
-                objetivo.congelada = True
-        print(f"{self.nombre} usó Congelar!")
+        if len(unidades) == 0:
+            return False, ""
+
+        objetivo = unidades[0]
+
+        if objetivo.viva:
+            objetivo.congelada = True
+            return True, f"{self.nombre} congeló a {objetivo.nombre}."
+
+        return False, ""
 
 
 class Muro:
