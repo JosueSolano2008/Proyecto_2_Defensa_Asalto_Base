@@ -44,11 +44,14 @@ class TorreBasica(Torre):
         super().__init__("Torre Básica", costo=50, vida=80, daño=15, alcance=3, faccion=faccion)
         self.turnos_habilidad = 3
 
-def activar_habilidad(self, unidades):
-    for unidad in unidades:
-        if unidad.viva:
-            unidad.recibir_daño(self.daño // 2)
-    print(f"{self.nombre} usó Daño en Área!")
+    def activar_habilidad(self, unidades):
+        # Disparo Doble: ataca a las dos primeras unidades en alcance
+        objetivos = [u for u in unidades if u.viva][:2]
+        for unidad in objetivos:
+            unidad.recibir_daño(self.daño)
+        if objetivos:
+            return True, f"{self.nombre} usó Disparo Doble contra {len(objetivos)} unidad(es)."
+        return False, ""
 
 
 class TorrePesada(Torre):
