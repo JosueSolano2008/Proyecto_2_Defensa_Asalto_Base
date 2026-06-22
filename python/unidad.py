@@ -41,7 +41,6 @@ class Soldado(Unidad):
 
     def activar_habilidad(self):
         self.daño *= 2
-        print(f"{self.nombre} usó Ataque Doble!")
 
 
 class Tanque(Unidad):
@@ -51,12 +50,10 @@ class Tanque(Unidad):
 
     def activar_habilidad(self):
         self.escudo = True
-        print(f"{self.nombre} activó Escudo Temporal!")
 
     def recibir_daño(self, cantidad):
         if self.escudo:
             self.escudo = False
-            print(f"{self.nombre} bloqueó el daño con su escudo!")
         else:
             super().recibir_daño(cantidad)
 
@@ -67,4 +64,3 @@ class UnidadRapida(Unidad):
 
     def activar_habilidad(self):
         self.velocidad += 2
-        print(f"{self.nombre} aumentó su velocidad!")
