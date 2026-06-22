@@ -74,3 +74,8 @@ habilidades especiales) y las imágenes de las facciones Imperio, Rebeldes y
 Reinado fueron desarrollados conjuntamente. La integración final del motor
 de juego (mapa, rondas, combate, economía), la interfaz gráfica en Tkinter
 y la incorporación de las imágenes al mapa también fueron trabajo conjunto.
+
+## Capturas de pantalla
+
+### Pantalla de Login
+![Login](Assets/capturas/captura_login.png)
