@@ -8,7 +8,7 @@
 
 ## Cómo ejecutar
 ```bash
-pip install Pillow
+pip install Pillow pygame
 python main.py
 ```
 
@@ -47,8 +47,10 @@ Proyecto_2_Defensa_Asalto_Base/
 | Reinado | Azul acero | Torres clásicas de fantasía con bandera |
 
 Cada facción tiene imágenes propias para sus 3 tipos de torre y sus 3 tipos de unidad,
-ubicadas en `Assets/<Facción>/`. Si una imagen no se encuentra, el juego usa
-automáticamente el color de respaldo de la facción (no se rompe el juego).
+ubicadas en `Assets/<Facción>/`. La base central y los muros se tiñen con el color
+de la facción defensora para mantener una identidad visual consistente. Si una imagen
+no se encuentra, el juego usa automáticamente el color de respaldo de la facción
+(no se rompe el juego).
 
 ## Torres
 | Torre | Costo | Vida | Daño | Alcance | Habilidad |
