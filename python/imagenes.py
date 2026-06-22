@@ -20,7 +20,7 @@ ARCHIVOS = {
         "unidad_tanque": "FuerteImperio.gif",
     },
     "rebeldes": {
-        "torre_basica": "CastilloBasicoRebelde.png",
+        "torre_basica": "Castillo basico, rebeldes.webp",
         "torre_pesada": "PesadoRebelde.png",
         "torre_magica": "MagicaRebeldes.png",
         "unidad_soldado": "BasicoRebelde.gif",
@@ -29,7 +29,7 @@ ARCHIVOS = {
     },
     "reinado": {
         "torre_basica": "torreRegular.png",
-        "torre_pesada": "TorrePesada.png",
+        "torre_pesada": "Torre Pesada.png",
         "torre_magica": "TorreMagica.png",
         "unidad_soldado": "BasicoReino.gif",
         "unidad_rapida": "MedioReino.gif",
