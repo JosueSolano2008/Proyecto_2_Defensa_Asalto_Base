@@ -77,5 +77,17 @@ y la incorporación de las imágenes al mapa también fueron trabajo conjunto.
 
 ## Capturas de pantalla
 
-### Pantalla de Login
-![Login](Assets/capturas/captura_login.png)
+### 1. Login
+![Login](Assets/capturas/captura_01_login.png)
+
+### 2. Selección de Facción
+![Facción](Assets/capturas/captura_02_faccion.png)
+
+### 3. Fase Defensor — Construcción del mapa
+![Mapa Defensor](Assets/capturas/captura_03_mapa_defensor.png)
+
+### 4. Fase de Combate
+![Combate](Assets/capturas/captura_04_combate.png)
+
+### 5. Fin de Partida y Ranking
+![Ranking](Assets/capturas/captura_05_ranking_fin.png)
