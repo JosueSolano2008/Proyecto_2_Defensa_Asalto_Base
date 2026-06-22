@@ -3,6 +3,7 @@ import os
 import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
+import pygame
 from python.jugador import Jugador
 from python.juego import Juego, FILAS, COLUMNAS, FILA_BASE, COL_BASE
 from python.juego import obtener_torres, obtener_unidades, distancia, mover_unidad
@@ -39,6 +40,37 @@ CELDA_COLORES = {
 }
 
 TAMAÑO_CELDA = 58
+
+# ── Música de fondo ────────────────────────────────────────────
+
+def ruta_asset(nombre):
+    return os.path.join(os.path.dirname(__file__), "Assets", nombre)
+
+
+def iniciar_musica():
+    try:
+        pygame.mixer.init()
+
+        ruta_audio = ruta_asset("Wii Shop Channel Theme HQ  Wii music (1 HOUR).mp3")
+
+        if not os.path.exists(ruta_audio):
+            print(f"No se encontró el audio: {ruta_audio}")
+            return
+
+        pygame.mixer.music.load(ruta_audio)
+        pygame.mixer.music.set_volume(0.35)  # volumen entre 0.0 y 1.0
+        pygame.mixer.music.play(-1)  # -1 significa repetir infinitamente
+
+    except Exception as e:
+        print(f"Error iniciando música: {e}")
+
+
+def detener_musica():
+    try:
+        pygame.mixer.music.stop()
+        pygame.mixer.quit()
+    except Exception:
+        pass
 
 # ── Helpers UI ────────────────────────────────────────────────
 
@@ -732,5 +764,10 @@ def _construir_ranking(parent):
 
 if __name__ == "__main__":
     root = tk.Tk()
+    iniciar_musica()
     PantallaLogin(root)
+    def cerrar_juego():
+        detener_musica()
+        root.destroy()
+    root.protocol("WM_DELETE_WINDOW", cerrar_juego)
     root.mainloop()
