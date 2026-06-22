@@ -266,12 +266,15 @@ class PantallaMapa:
         self.fase = FASE_DEF
         self.seleccion = tk.StringVar(value="basica")
         self.frame_animacion = 0
+        self.animacion_activa = True
+        self.animacion_id = None
         self.img_fondo = self._cargar_imagen_asset("fondo.png",COLUMNAS * TAMAÑO_CELDA,FILAS * TAMAÑO_CELDA)
         self.img_explosion = self._cargar_imagen_asset("explosion.webp",TAMAÑO_CELDA,TAMAÑO_CELDA)
         self.img_muro = self._cargar_imagen_asset("Muro.png",TAMAÑO_CELDA,TAMAÑO_CELDA)
         self.img_base = self._cargar_imagen_asset("Base.png", TAMAÑO_CELDA, TAMAÑO_CELDA)
 
         self.frame = tk.Frame(root, bg=COLORES["bg"])
+        self.frame.bind("<Destroy>", self._al_destruir_frame, add="+")
         self.frame.pack(fill="both", expand=True)
 
         self._construir_ui()
@@ -282,9 +285,24 @@ class PantallaMapa:
         return os.path.join(os.path.dirname(__file__), "Assets", nombre)
 
     def _animar_gifs(self):
+        if not self.animacion_activa or not self.frame.winfo_exists():
+            return
         self.frame_animacion += 1
         self.dibujar_mapa()
-        self.root.after(150, self._animar_gifs)
+        self.animacion_id = self.root.after(150, self._animar_gifs)
+
+    def _detener_animacion(self):
+        self.animacion_activa = False
+        if self.animacion_id is not None:
+            try:
+                self.root.after_cancel(self.animacion_id)
+            except tk.TclError:
+                pass
+            self.animacion_id = None
+
+    def _al_destruir_frame(self, event):
+        if event.widget is self.frame:
+            self._detener_animacion()
 
     def _cargar_imagen_asset(self, nombre, ancho, alto):
         ruta = self._ruta_asset(nombre)
@@ -663,6 +681,7 @@ class PantallaMapa:
 
             if ganador_partida:
                 ganador_partida.agregar_victoria(rol)
+                self._detener_animacion()
                 self.frame.destroy()
                 centrar(self.root, 520, 400)
                 PantallaFin(self.root, ganador_partida, rol)
